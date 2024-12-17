@@ -1,4 +1,5 @@
-
+from decimal import Decimal
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator , MaxValueValidator
@@ -6,6 +7,14 @@ from django.core.exceptions import ValidationError
 
 
 # Create your models here.
+
+class Amenity(models.Model):
+    """Model for an amenity in a hotel or room (e.g., Wi-Fi, Pool, Gym)."""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)  # Optional description of the amenity
+
+    def __str__(self):
+        return self.name
 
 
 class Location(models.Model):
@@ -21,6 +30,7 @@ class Location(models.Model):
 class Hotel(models.Model):
     """Hotel Model"""
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='hotels')
+    amenities = models.ManyToManyField(Amenity, related_name='hotel', blank=True)  # Many-to-many relation to Amenity
 
     name            = models.CharField(max_length=100 , unique=True)
     stars           = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(5)])
@@ -66,11 +76,12 @@ class Room(models.Model):
         FAMILY = 'Family'
 
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
+    amenities = models.ManyToManyField(Amenity, related_name='room', blank=True)  # Many-to-many relation to Amenity
 
     room_number = models.IntegerField(default=0)
     is_Booked = models.BooleanField(default=False)
     type = models.CharField(max_length=100, choices=RoomType.choices)
-    price_per_night = models.DecimalField(decimal_places=2, max_digits=10)
+    price_per_night = models.DecimalField(decimal_places=2, max_digits=10 ,  validators=[MinValueValidator(Decimal('0.01'))])
 
     def __str__(self):
         return f"Room {self.room_number} ({self.type}) - {self.hotel.name}"
@@ -97,7 +108,8 @@ class Booking(models.Model):
     """Booking Model"""
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='bookings')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
-    tax  = models.ForeignKey(Taxes,on_delete=models.CASCADE,related_name='taxes')
+    room = models.ForeignKey(Room,on_delete=models.CASCADE , related_name='bookings')
+    tax  = models.ForeignKey(Taxes,on_delete=models.CASCADE,related_name='bookings')
 
     status = models.CharField(max_length=100 , choices=StatusChoices.choices)
     start_date = models.DateField()
@@ -131,12 +143,49 @@ class Payments(models.Model):
         Paid    =   'Paid'
         Pending =   'Pending'
 
-    booking = models.ForeignKey(Booking,on_delete=models.CASCADE , related_name='Payments')
+    booking = models.ForeignKey(Booking,on_delete=models.CASCADE , related_name='payments')
 
     date    = models.DateTimeField()
-    Amount  = models.DecimalField(max_digits=10, decimal_places=2)
+    Amount  = models.DecimalField(max_digits=10, decimal_places=2 ,  validators=[MinValueValidator(Decimal('0.01'))])
     method  = models.CharField(max_length=100 , choices=MethodChoice.choices)
     Status  = models.CharField(max_length=100 , choices=StatusChoice.choices)
 
     def __str__(self):
         return f"Payment of {self.Amount} ({self.method}) - {self.booking} [{self.Status}]"
+
+    def calculate_amount(self):
+        """Calculate the payment amount based on room price, nights, and tax."""
+        if not self.booking or not self.booking.room or not self.booking.tax:
+            raise ValueError("Booking, room, or tax information is missing.")
+
+        # Get the price per night and the number of nights
+        price_per_night = self.booking.room.price_per_night
+        nights = (self.booking.end_date - self.booking.start_date).days
+
+        # Calculate the base amount (price per night * number of nights)
+        base_amount = price_per_night * nights
+
+        # Get the tax percentage and apply it to the base amount
+        tax_percentage = self.booking.tax.percentage
+        tax_amount = (base_amount * tax_percentage) / Decimal('100')
+
+        # Final amount includes base amount + tax
+        final_amount = base_amount + tax_amount
+        return final_amount
+
+    def save(self, *args, **kwargs):
+        """Override save method to calculate the amount before saving."""
+        # Calculate and set the amount before saving the payment instance
+        if self.Amount is None:  # Calculate amount only if not already set
+            self.Amount = self.calculate_amount()
+        super().save(*args, **kwargs)
+
+class Review(models.Model):
+    """Model Class"""
+
+    customer = models.ForeignKey(Customer,on_delete=models.CASCADE , related_name='review')
+    hotel   = models.ForeignKey(Hotel , on_delete=models.CASCADE , related_name='review')
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(5)])
+    description = models.TextField(blank=True , null=True)
+    date = models.DateField()
+
