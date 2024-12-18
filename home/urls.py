@@ -24,7 +24,7 @@ urlpatterns = [
     path('signin/', signin, name='signin'),
     path('signup/', signup, name='signup'),
     path('signout/', signout, name='signout'),
-    path('hotel/<uid>',get_hotel,name='get_hotel'),
+    path('hotel/<id>',get_hotel,name='get_hotel'),
 ]
 
 if settings.DEBUG:

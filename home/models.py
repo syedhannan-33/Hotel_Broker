@@ -35,6 +35,7 @@ class Hotel(models.Model):
     stars           = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(5)])
     is_suspended    = models.BooleanField(default=False)
     is_premium      = models.BooleanField(default=False)
+    room_count      = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return f"{self.name} - {self.stars} Stars"
