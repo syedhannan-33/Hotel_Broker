@@ -51,6 +51,27 @@ class Hotel(models.Model):
     def __str__(self):
         return f"{self.name} - {self.stars} Stars"
 
+    def save(self, *args, **kwargs):
+        """Override save to create rooms automatically."""
+        is_new = self.pk is None  # Check if it's a new hotel instance
+        super().save(*args, **kwargs)  # Save the hotel first
+
+        if is_new and self.room_count > 0:
+            # Create rooms only if the hotel is new and room_count > 0
+            self.create_rooms(self.room_count)
+
+    def create_rooms(self, room_count):
+        """Create rooms for the hotel when it's created."""
+        for i in range(1, room_count + 1):
+            # Create a new room instance for each room
+            Room.objects.create(
+                hotel=self,
+                room_number=i,
+                is_Booked=False,
+                type=Room.RoomType.STANDARD,  # You can customize room types
+                price_per_night=Decimal('1250.00')  # You can set a default price or modify this
+            )
+
 
 class HotelImages(models.Model):
     hotel= models.ForeignKey(Hotel ,related_name="images", on_delete=models.CASCADE)
