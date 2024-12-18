@@ -1,6 +1,7 @@
 from django.contrib import admin
 from home.models import Hotel,Location,Promotions,Room,Customer,Booking,BookingRoom,Taxes,Payments,Review,Amenity,HotelImages
 
+
 # Register your models here.
 
 admin.site.register(Hotel)

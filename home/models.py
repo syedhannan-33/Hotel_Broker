@@ -82,11 +82,12 @@ class Room(models.Model):
         FAMILY = 'Family'
 
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='rooms')
+    amenities = models.ManyToManyField(Amenity, related_name='room', blank=True)  # Many-to-many relation to Amenity
 
     room_number = models.IntegerField(default=0)
     is_Booked = models.BooleanField(default=False)
     type = models.CharField(max_length=100, choices=RoomType.choices)
-    price_per_night = models.DecimalField(decimal_places=2, max_digits=10)
+    price_per_night = models.DecimalField(decimal_places=2, max_digits=10 ,  validators=[MinValueValidator(Decimal('0.01'))])
 
     def __str__(self):
         return f"Room {self.room_number} ({self.type}) - {self.hotel.name}"
@@ -113,7 +114,8 @@ class Booking(models.Model):
     """Booking Model"""
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='bookings')
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='bookings')
-    tax  = models.ForeignKey(Taxes,on_delete=models.CASCADE,related_name='taxes')
+    room = models.ForeignKey(Room,on_delete=models.CASCADE , related_name='bookings')
+    tax  = models.ForeignKey(Taxes,on_delete=models.CASCADE,related_name='bookings')
 
     status = models.CharField(max_length=100 , choices=StatusChoices.choices)
     start_date = models.DateField()
