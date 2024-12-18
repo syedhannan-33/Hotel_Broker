@@ -1,9 +1,9 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import authenticate, logout, login
 from django.contrib import messages
 from django.contrib.auth.models import User
-from . models import *
+from django.contrib.auth.decorators import login_required
+from home.models import *
 from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime
@@ -29,7 +29,7 @@ def check_booking(id, room_count, start_date, end_date):
     )
     # qs = qs1|qs2
 
-    if len(qs) >= room_count:
+    if qs.count() >= room_count:
         return False
     return True
 
@@ -96,7 +96,7 @@ def signin(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user_obj = authenticate(request, username=username, password=password)
-        
+
         if user_obj:
             if user_obj.is_active:
                 login(request, user_obj)
@@ -108,7 +108,7 @@ def signin(request):
         else:
             messages.error(request, 'Invalid username or password.')
             return redirect('signin')
-    
+
     return render(request, 'home/signin.html')
 
 
@@ -118,6 +118,8 @@ def signup(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
 
         # Check if the username or email already exists
         if User.objects.filter(username=username).exists():
@@ -130,6 +132,14 @@ def signup(request):
         # Create a new user and hash the password
         user = User.objects.create_user(username=username, password=password, email=email)
         user.save()
+
+        customer = Customer.objects.create(
+            user=user,
+            phone=phone,
+            address=address
+        )
+        customer.save()
+
         messages.success(request, 'Welcome! Signup Successful.')
         return redirect('signin')
 
@@ -153,16 +163,22 @@ def get_hotel(request, id):
 
         # Validate dates
         try:
+            valid = check_booking(
+                hotel.id, hotel.room_count, checkin, checkout)
+            if not valid:
+                messages.error(request, 'Booking for these days are full')
+                return render(request, 'home/hotel.html', context)
+        except:
+            messages.error(request, 'Please Enter Valid Date Data')
+            return render(request, 'home/hotel.html', context)
+
+        try:
             checkin_date = datetime.strptime(checkin, '%Y-%m-%d')
             checkout_date = datetime.strptime(checkout, '%Y-%m-%d')
-
-            if checkin_date >= checkout_date:
-                messages.error(request, 'Check-in date must be before the check-out date.')
-                return render(request, 'home/hotel.html', context)
-
         except ValueError:
-            messages.error(request, 'Please enter valid date data.')
+            messages.error(request, 'Invalid date format. Please use YYYY-MM-DD.')
             return render(request, 'home/hotel.html', context)
+
 
         # Check room availability
         available_rooms = hotel.rooms.filter(is_Booked=False)
@@ -174,13 +190,22 @@ def get_hotel(request, id):
         # Get the first available room
         room_to_book = available_rooms.first()
 
+        try:
+            customer = request.user.customer_profile
+        except Customer.DoesNotExist:
+            messages.error(request, "Please complete your profile before booking a hotel.")
+            return redirect('profile_update')
+
+        tax = Taxes.objects.first()  # Example: gets the first available tax
+
+
         # Create booking and booking room
         customer = get_object_or_404(Customer, user=request.user)
         booking = Booking.objects.create(
             customer=customer,
             hotel=hotel,
             room=room_to_book,
-            tax=None,  # Add appropriate tax handling
+            tax=tax,  # Add appropriate tax handling
             status=Booking.StatusChoices.PENDING,
             start_date=checkin_date,
             end_date=checkout_date
@@ -195,7 +220,60 @@ def get_hotel(request, id):
 
     return render(request, 'home/hotel.html', context)
 
+def my_bookings(request):
+    bookings = Booking.objects.filter(customer=request.user.customer_profile)
+    return render(request, 'home/my_bookings.html', {'bookings': bookings})
+
+def cancel_booking(request, booking_id):
+    # Get the booking, ensure it belongs to the current logged-in customer
+    booking = get_object_or_404(Booking, id=booking_id, customer=request.user.customer_profile)
+
+    # Check if the booking is already canceled
+    if booking.status != Booking.StatusChoices.CANCELED:
+        booking.status = Booking.StatusChoices.CANCELED
+        booking.save()
+
+        booking.room.is_Booked = False
+        booking.room.save()
+
+        #deleting the associated booking room entry
+        booking_room = get_object_or_404(BookingRoom, booking=booking, room=booking.room)
+        booking_room.delete()
+
+        messages.success(request, f'Your booking with ID {booking.id} has been successfully cancelled.')
+    else:
+        messages.error(request, 'This booking has already been cancelled.')
+
+    # Redirect back to the user's bookings page
+    return redirect('my_bookings')
+
+def pay_booking(request, booking_id):
+    # Fetch the booking to be paid
+    booking = get_object_or_404(Booking, id=booking_id)
+
+    # Handle payment logic here
+    # For now, we will just render a simple payment confirmation page
+    if request.method == 'POST':
+        # Update the booking status to "Completed" once payment is made
+        booking.status = Booking.StatusChoices.CONFIRMED
+        booking.save()
+
+        booking.room.is_Booked = True
+        booking.room.save()
+
+        messages.success(request, f'Your booking with ID {booking.id} has been successfully Confirmed.')
+
+        # Redirect to a success page
+        return redirect('my_bookings')
+
+    # Render the payment page
+    return render(request, 'home/pay_booking.html', {'booking': booking})
+
 
 def hotel_list(request):
     hotels = Hotel.objects.prefetch_related('rooms').all()
     return render(request, 'your_template.html', {'hotels': hotels})
+
+def profile_update(request):
+    # Your logic for updating the profile
+    return render(request, 'profile_update.html')

@@ -1,0 +1,53 @@
+{% extends 'home/base.html' %}
+
+{% block title %}
+My Bookings
+{% endblock title %}
+
+{% block body %}
+<main class="container mt-5">
+    <h1 class="text-center">My Bookings</h1>
+
+    {% if bookings %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">Booking ID</th>
+            <th scope="col">Hotel Name</th>
+            <th scope="col">Room</th>
+            <th scope="col">Start Date</th>
+            <th scope="col">End Date</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for booking in bookings %}
+        <tr>
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.hotel.name }}</td>
+            <td>{{ booking.room.room_number}}</td>
+            <td>{{ booking.start_date }}</td>
+            <td>{{ booking.end_date }}</td>
+            <td>{{ booking.status }}</td>
+            <td>
+                <!-- Cancel Button -->
+                <form action="{% url 'cancel_booking' booking.id %}" method="POST" style="display:inline-block;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" {% if booking.status == 'Canceled' %}disabled{% endif %}>Cancel</button>
+                </form>
+
+                <!-- Pay Button -->
+                {% if booking.status == 'Pending' %}
+                <a href="{% url 'pay_booking' booking.id %}" class="btn btn-success" style="margin-left: 10px;">Pay</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center">You have no bookings yet.</p>
+    {% endif %}
+</main>
+{% endblock body %}

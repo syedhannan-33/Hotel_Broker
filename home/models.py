@@ -6,6 +6,17 @@ from django.core.exceptions import ValidationError
 
 
 # Create your models here.
+class Customer(models.Model):
+    """Customer Model"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
+
+    phone = models.CharField(max_length=20, blank=False, null=False,unique=True)
+    address = models.CharField(max_length=255, blank=False, null=False)
+    is_blacklisted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {'Blacklisted' if self.is_blacklisted else 'Active'}"
+
 
 class Amenity(models.Model):
     """Model for an amenity in a hotel or room (e.g., Wi-Fi, Pool, Gym)."""
@@ -48,6 +59,16 @@ class HotelImages(models.Model):
     def __str__(self):
             return f"Image for {self.hotel.name} - {self.images.name.split('/')[-1]}"
 
+class HotelBooking(models.Model):
+    hotel= models.ForeignKey(Hotel  , related_name="hotel_bookings" , on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, related_name="user_bookings" , on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    booking_type= models.CharField(max_length=100,choices=(('Pre Paid' , 'Pre Paid') , ('Post Paid' , 'Post Paid')))
+
+    def __str__(self) -> str:
+        return f'{self.hotel.hotel_name} {self.start_date} to {self.end_date}'
+
 class Promotions(models.Model):
     hotel           = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='promotions')
 
@@ -62,16 +83,6 @@ class Promotions(models.Model):
     def __str__(self):
         return f"Promotion {self.discount}% at {self.hotel.name} ({self.start_date} to {self.end_date})"
 
-class Customer(models.Model):
-    """Customer Model"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
-
-    phone = models.CharField(max_length=20, blank=False, null=False,unique=True)
-    address = models.CharField(max_length=255, blank=False, null=False)
-    is_blacklisted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.user.username} - {'Blacklisted' if self.is_blacklisted else 'Active'}"
 
 class Room(models.Model):
     """Room Model"""
