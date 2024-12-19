@@ -2,6 +2,8 @@
 {% block title %}
 {{hotel.hotel_name}}
 {% endblock title %}
+{% load coustom_tags %}
+
 
 {% block css %}
 <style>
@@ -40,12 +42,13 @@
     <div class="mt-4 mb-4  w-75 m-auto">
         <h1 class="fw-bold">{{hotel.hotel_name|title}}</h1>
         <ul class="list-group list-group-horizontal">
-            {% for room in hotel.rooms.all %}
+            {% for room_type, price in hotel.rooms.all|unique_room_types_with_prices %}
             <li class="list-group-item mt-1 mr-1">
-                Hotel {{ hotel.name }} <br> Rs. {{ room.price_per_night }}
+                {{ room_type|title }} <br> Rs. {{ price }}
             </li>
             {% endfor %}
         </ul>
+        
         {% for i in hotel.amenities.all %}
 
         <ul class="list-group ">
@@ -64,6 +67,18 @@
                 <div class="card-body">
                     <form method='POST'>
                         {% csrf_token %}
+                        <label for="rtype" class="mt-3">
+                            Package Type
+                        </label>
+                        <select name="roomType" class="form-control" id="roomType">
+                            <option value="deluxe" {% if roomType == 'deluxe' %}selected{% endif %}>Deluxe</option>
+                            <option value="suite" {% if roomType == 'suite' %}selected{% endif %}>Suite</option>
+                            <option value="family" {% if roomType == 'family' %}selected{% endif %}>Family</option>
+                            <option value="executive" {% if roomType == 'executive' %}selected{% endif %}>Standard</option>
+                            <option value="premium" {% if roomType == 'premium' %}selected{% endif %}>Superior</option>
+                        </select>
+                        
+
                         <label for="startDate" class='mt-3'>
                             Check In
                         </label>

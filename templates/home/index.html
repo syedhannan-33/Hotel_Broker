@@ -220,12 +220,13 @@ Welcome To hotel.com
                                         <h5 class="card-title">{{hotel.name}}</h5>
                                         <p class="card-text">{{hotel.description|truncatechars:100}}</p>
                                         <ul class="list-group list-group-horizontal">
-                                            {% for room in hotel.rooms.all %}
+                                            {% for room_type, price in hotel.rooms.all|unique_room_types_with_prices %}
                                             <li class="list-group-item mt-1 mr-1">
-                                                {{ hotel.name }} <br> Rs. {{ room.price_per_night }}
+                                                {{ room_type|title }} <br> Rs. {{ price }}
                                             </li>
                                             {% endfor %}
                                         </ul>
+                                        
                                         <ul class="list-group list-group-horizontal">
                                             {% for i in hotel.amenities.all %}
                                             {% if forloop.counter|divisibleby:3 %}
