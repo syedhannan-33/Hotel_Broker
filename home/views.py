@@ -166,8 +166,13 @@ def get_hotel(request, id):
     if request.method == 'POST':
         checkin = request.POST.get('startDate')
         checkout = request.POST.get('endDate')
+        broom_type = request.POST.get('roomType')  # Capture selected room type
+
         context['startdate'] = checkin
         context['enddate'] = checkout
+        context['roomType'] = broom_type  # Add selected room type to context for the template
+        print(f"Selected room type: {broom_type}")
+        broom_type = broom_type.capitalize()
 
         # Validate dates
         try:
@@ -187,12 +192,14 @@ def get_hotel(request, id):
             messages.error(request, 'Invalid date format. Please use YYYY-MM-DD.')
             return render(request, 'home/hotel.html', context)
 
+        # Filter available rooms based on the selected room type
+        # Filter available rooms based on the selected room type (using 'type' instead of 'room_type')
+        available_rooms = hotel.rooms.filter(is_Booked=False, room_type=broom_type)
+        print(f"Selected room type: {available_rooms}")
 
-        # Check room availability
-        available_rooms = hotel.rooms.filter(is_Booked=False)
 
         if not available_rooms.exists():
-            messages.error(request, 'No rooms available for the selected dates.')
+            messages.error(request, 'No rooms available for the selected dates and room type.')
             return render(request, 'home/hotel.html', context)
 
         # Get the first available room
@@ -205,7 +212,6 @@ def get_hotel(request, id):
             return redirect('profile_update')
 
         tax = Taxes.objects.first()  # Example: gets the first available tax
-
 
         # Create booking and booking room
         customer = get_object_or_404(Customer, user=request.user)

@@ -68,7 +68,7 @@ class Hotel(models.Model):
                 hotel=self,
                 room_number=i,
                 is_Booked=False,
-                type=Room.RoomType.STANDARD,  # You can customize room types
+                room_type=Room.RoomType.STANDARD,  # You can customize room types
                 price_per_night=Decimal('1250.00')  # You can set a default price or modify this
             )
 
@@ -119,11 +119,11 @@ class Room(models.Model):
 
     room_number = models.IntegerField(default=0)
     is_Booked = models.BooleanField(default=False)
-    type = models.CharField(max_length=100, choices=RoomType.choices)
+    room_type = models.CharField(max_length=100, choices=RoomType.choices)
     price_per_night = models.DecimalField(decimal_places=2, max_digits=10 ,  validators=[MinValueValidator(Decimal('0.01'))])
 
     def __str__(self):
-        return f"Room {self.room_number} ({self.type}) - {self.hotel.name}"
+        return f"Room {self.room_number} ({self.room_type}) - {self.hotel.name}"
 
 
 class Taxes(models.Model):
