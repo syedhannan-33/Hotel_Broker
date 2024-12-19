@@ -9,3 +9,13 @@ def  modify_url(value):
     return value
 
 register.filter('modify_url',modify_url)
+
+
+@register.filter
+def unique_room_types_with_prices(rooms):
+    """Filter unique room types from a queryset of rooms with their respective prices."""
+    unique_rooms = {}
+    for room in rooms:
+        if room.type not in unique_rooms:
+            unique_rooms[room.type] = room.price_per_night
+    return list(unique_rooms.items())
