@@ -1,3 +1,6 @@
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
 from django.shortcuts import render, redirect , get_object_or_404
 from django.contrib.auth import authenticate, logout, login
 from django.contrib import messages
@@ -8,6 +11,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime
 from django.db.models import Min, Max
+from decimal import Decimal
 
 
 
@@ -52,7 +56,10 @@ def index(request):
 
     if search:
         hotels = hotels.filter(
-            Q(name__icontains=search)
+            Q(name__icontains=search) |  # Search in hotel name
+            Q(location__city__icontains=search) |  # Search in city
+            Q(location__state__icontains=search) |  # Search in state
+            Q(location__country__icontains=search)  # Search in country
         ).distinct()
 
     if sort_by:
@@ -63,16 +70,6 @@ def index(request):
             # Get the maximum price for each hotel based on room prices
             hotels = hotels.annotate(max_price=Max('rooms__price_per_night')).order_by('-max_price')
 
-    if price:
-        hotels = hotels.filter(hotel_price__lte=Decimal(price))
-
-    if startdate and enddate:
-        unbooked_hotels = []
-        for hotel in hotels:
-            valid = check_booking(hotel.id, hotel.room_count, startdate, enddate)
-            if valid:
-                unbooked_hotels.append(hotel)
-        hotels = unbooked_hotels
 
     hotels = hotels.distinct()
     p = Paginator(hotels, 2)
@@ -195,6 +192,10 @@ def get_hotel(request, id):
             messages.error(request, 'Invalid date format. Please use YYYY-MM-DD.')
             return render(request, 'home/hotel.html', context)
 
+        if(checkin_date > checkout_date):
+            messages.error(request, 'Invalid Date Selection')
+            return render(request, 'home/hotel.html', context)
+
         # Filter available rooms based on the selected room type
         # Filter available rooms based on the selected room type (using 'type' instead of 'room_type')
         available_rooms = hotel.rooms.filter(is_Booked=False, room_type=broom_type)
@@ -265,9 +266,6 @@ def cancel_booking(request, booking_id):
     return redirect('my_bookings')
 
 
-from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib import messages
-
 def pay_booking(request, booking_id):
     # Fetch the booking to be paid
     booking = get_object_or_404(Booking, id=booking_id)
@@ -283,7 +281,7 @@ def pay_booking(request, booking_id):
     # Calculate the total amount
     price_per_night = booking.room.price_per_night
     sub_total = num_nights * price_per_night
-    tax = sub_total * tax_rate
+    tax = sub_total * (tax_rate/Decimal(100))
     total = sub_total + tax
 
     if request.method == 'POST':
@@ -293,6 +291,14 @@ def pay_booking(request, booking_id):
 
         booking.room.is_Booked = True
         booking.room.save()
+
+        Payments.objects.create(
+            booking=booking,
+            date=datetime.now(),
+            Amount=total,
+            method=Payments.MethodChoice.Online,  # Assuming payment is online; modify as needed
+            Status=Payments.StatusChoice.Paid
+        )
 
         messages.success(request, f'Your booking with ID {booking.id} has been successfully confirmed.')
 

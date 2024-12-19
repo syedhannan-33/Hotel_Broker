@@ -192,32 +192,7 @@ class Payments(models.Model):
     def __str__(self):
         return f"Payment of {self.Amount} ({self.method}) - {self.booking} [{self.Status}]"
 
-    def calculate_amount(self):
-        """Calculate the payment amount based on room price, nights, and tax."""
-        if not self.booking or not self.booking.room or not self.booking.tax:
-            raise ValueError("Booking, room, or tax information is missing.")
 
-        # Get the price per night and the number of nights
-        price_per_night = self.booking.room.price_per_night
-        nights = (self.booking.end_date - self.booking.start_date).days
-
-        # Calculate the base amount (price per night * number of nights)
-        base_amount = price_per_night * nights
-
-        # Get the tax percentage and apply it to the base amount
-        tax_percentage = self.booking.tax.percentage
-        tax_amount = (base_amount * tax_percentage) / Decimal('100')
-
-        # Final amount includes base amount + tax
-        final_amount = base_amount + tax_amount
-        return final_amount
-
-    def save(self, *args, **kwargs):
-        """Override save method to calculate the amount before saving."""
-        # Calculate and set the amount before saving the payment instance
-        if self.Amount is None:  # Calculate amount only if not already set
-            self.Amount = self.calculate_amount()
-        super().save(*args, **kwargs)
 
 class Review(models.Model):
     """Model Class"""
