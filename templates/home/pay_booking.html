@@ -1,18 +1,23 @@
 {% extends 'home/base.html' %}
 
 {% block title %}
-Pay for Booking
+Pay for Booking - {{ booking.id }}
 {% endblock title %}
 
 {% block body %}
 <main class="container mt-5">
     <h1 class="text-center">Payment for Booking ID: {{ booking.id }}</h1>
 
-    <p>Hotel: {{ booking.hotel.name }}</p>
-    <p>Room: {{ booking.room.room_number }}</p>
-    <p>Start Date: {{ booking.start_date }}</p>
-    <p>End Date: {{ booking.end_date }}</p>
-    <p>Total Amount: $100 (Example)</p> <!-- Replace with actual amount logic -->
+    <p><strong>Hotel:</strong> {{ booking.hotel.name }}</p>
+    <p><strong>Room:</strong> {{ booking.room.room_number }}</p>
+    <p><strong>Start Date:</strong> {{ booking.start_date }}</p>
+    <p><strong>End Date:</strong> {{ booking.end_date }}</p>
+
+    <p><strong>Price per Night:</strong> ${{ price_per_night }}</p>
+    <p><strong>Number of Nights:</strong> {{ num_nights }}</p>
+    <p><strong>Subtotal:</strong> ${{ sub_total }}</p>
+    <p><strong>Tax ({{ booking.tax.percentage }}%):</strong> ${{ tax }}</p>
+    <p><strong>Total Amount:</strong> ${{ total|floatformat:2 }}</p>
 
     <form method="POST">
         {% csrf_token %}
