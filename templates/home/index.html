@@ -212,44 +212,40 @@ Welcome To hotel.com
                             <div class="row g-0">
                                 <div class="col-md-4">
                                     <a href="/hotel/{{hotel.id}}">
-                                
-                                        <img src="/media/{{hotel.images.first.images}}" class="img-fluid rounded-start"
-                                            alt="...">
+                                        <img src="/media/{{hotel.images.first.images}}" class="img-fluid rounded-start" alt="...">
                                     </a>
                                 </div>
-
-                                </div> <div class="col-md-8">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{hotel.hotel_name}}</h5>
-                                    <p class="card-text">{{hotel.description|truncatechars:100}}
-                                    </p>
-                                    <ul class="list-group list-group-horizontal">
-                                        {% for room in hotel.rooms.all %}
-                                        <li class="list-group-item mt-1 mr-1">
-                                            Hotel {{ hotel.name }} <br> Rs. {{ room.price_per_night }}
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                    <ul class="list-group list-group-horizontal">
-                                        {% for i in hotel.amenities.all %}
-                                        {% if forloop.counter|divisibleby:3%}
-                                    </ul>
-                                    <ul class="list-group list-group-horizontal">
-                                        {% else %}
-                                        <li class="list-group-item mt-1 mr-1">{{i}}</li>
-                                        {% endif %}
-                                        {% endfor %}
-                                    </ul>
-                                    <button class="btn btn-primary mt-2" type="submit">
-                                        Book Now
-                                    </button>
+                                <div class="col-md-8">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{hotel.name}}</h5>
+                                        <p class="card-text">{{hotel.description|truncatechars:100}}</p>
+                                        <ul class="list-group list-group-horizontal">
+                                            {% for room in hotel.rooms.all %}
+                                            <li class="list-group-item mt-1 mr-1">
+                                                {{ hotel.name }} <br> Rs. {{ room.price_per_night }}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        <ul class="list-group list-group-horizontal">
+                                            {% for i in hotel.amenities.all %}
+                                            {% if forloop.counter|divisibleby:3 %}
+                                        </ul>
+                                        <ul class="list-group list-group-horizontal">
+                                            {% else %}
+                                            <li class="list-group-item mt-1 mr-1">{{i}}</li>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                        <a href="/hotel/{{hotel.id}}" class="btn btn-primary mt-2">
+                                            Book Now
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
-
-                        <!--End Here loopo-->
                     </div>
+ 
                 </div>
             </div>
         </div>
