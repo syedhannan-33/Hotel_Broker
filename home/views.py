@@ -7,6 +7,7 @@ from home.models import *
 from django.db.models import Q
 from django.core.paginator import Paginator
 from datetime import datetime
+from django.db.models import Min, Max
 
 
 
@@ -48,7 +49,7 @@ def index(request):
     if selected_amenities:
         hotels = hotels.filter(
             amenities__name__in=selected_amenities).distinct()
-    
+
     if search:
         hotels = hotels.filter(
             Q(name__icontains=search)
@@ -56,9 +57,11 @@ def index(request):
 
     if sort_by:
         if sort_by == 'low_to_high':
-            hotels = hotels.order_by('hotel_price')
+            # Get the minimum price for each hotel based on room prices
+            hotels = hotels.annotate(min_price=Min('rooms__price_per_night')).order_by('min_price')
         elif sort_by == 'high_to_low':
-            hotels = hotels.order_by('-hotel_price')
+            # Get the maximum price for each hotel based on room prices
+            hotels = hotels.annotate(max_price=Max('rooms__price_per_night')).order_by('-max_price')
 
     if price:
         hotels = hotels.filter(hotel_price__lte=Decimal(price))
@@ -224,7 +227,7 @@ def get_hotel(request, id):
             start_date=checkin_date,
             end_date=checkout_date
         )
-        
+
         BookingRoom.objects.create(booking=booking, room=room_to_book)
         room_to_book.is_Booked = True
         room_to_book.save()
@@ -261,27 +264,51 @@ def cancel_booking(request, booking_id):
     # Redirect back to the user's bookings page
     return redirect('my_bookings')
 
+
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib import messages
+
 def pay_booking(request, booking_id):
     # Fetch the booking to be paid
     booking = get_object_or_404(Booking, id=booking_id)
 
-    # Handle payment logic here
-    # For now, we will just render a simple payment confirmation page
+    # Calculate the number of nights and the total cost
+    start_date = booking.start_date
+    end_date = booking.end_date
+    num_nights = (end_date - start_date).days
+
+    # Get the tax rate from the hotel's tax class
+    tax_rate = booking.tax.percentage if booking.tax else 0
+
+    # Calculate the total amount
+    price_per_night = booking.room.price_per_night
+    sub_total = num_nights * price_per_night
+    tax = sub_total * tax_rate
+    total = sub_total + tax
+
     if request.method == 'POST':
-        # Update the booking status to "Completed" once payment is made
+        # Update the booking status to "Confirmed" once payment is made
         booking.status = Booking.StatusChoices.CONFIRMED
         booking.save()
 
         booking.room.is_Booked = True
         booking.room.save()
 
-        messages.success(request, f'Your booking with ID {booking.id} has been successfully Confirmed.')
+        messages.success(request, f'Your booking with ID {booking.id} has been successfully confirmed.')
 
         # Redirect to a success page
         return redirect('my_bookings')
 
-    # Render the payment page
-    return render(request, 'home/pay_booking.html', {'booking': booking})
+    # Render the payment page with calculated values
+    return render(request, 'home/pay_booking.html', {
+        'booking': booking,
+        'num_nights': num_nights,
+        'price_per_night': price_per_night,
+        'sub_total': sub_total,
+        'tax': tax,
+        'total': total,
+    })
+
 
 
 def hotel_list(request):

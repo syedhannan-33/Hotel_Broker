@@ -17,6 +17,14 @@ class Customer(models.Model):
     def __str__(self):
         return f"{self.user.username} - {'Blacklisted' if self.is_blacklisted else 'Active'}"
 
+class Taxes(models.Model):
+    """Taxation Class"""
+
+    percentage  =   models.PositiveSmallIntegerField()
+    description =   models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.description} - {self.percentage}%"
 
 class Amenity(models.Model):
     """Model for an amenity in a hotel or room (e.g., Wi-Fi, Pool, Gym)."""
@@ -126,14 +134,6 @@ class Room(models.Model):
         return f"Room {self.room_number} ({self.room_type}) - {self.hotel.name}"
 
 
-class Taxes(models.Model):
-    """Taxation Class"""
-
-    percentage  =   models.PositiveSmallIntegerField()
-    description =   models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.description} - {self.percentage}%"
 
 
 class Booking(models.Model):
