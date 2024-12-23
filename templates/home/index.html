@@ -132,8 +132,12 @@ Welcome To hotel.com
                         <h5 class="card-header">Filter</h5>
                         <div class="card-body">         
                             <form action="" class="iform-group">
+
+                                <label for="Search ">
+                                    Search by Location
+                                </label>
                                 <div class="d-flex mb-3ammeni">
-                                    <input class="form-control me-2" type="search" placeholder="Search"
+                                    <input class="form-control me-2" type="search" placeholder="Enter hotel name or location"
                                         aria-label="Search" id="searchInput" name="searchInput" {% if search %}
                                         value="{{search}}" {% endif %}>
                                     <button class="btn btn-outline-success" id="searchBtn" type="submit">Search</button>
