@@ -41,18 +41,13 @@ def check_booking(id, room_count, start_date, end_date):
 
 def index(request):
     amenities = Amenity.objects.all()
-    hotels = Hotel.objects.all()
+    hotels = Hotel.objects.all().order_by('name')
     total_hotels = len(hotels)
-    selected_amenities = request.GET.getlist('selectAmenity')
     sort_by = request.GET.get('sortSelect')
     search = request.GET.get('searchInput')
-    startdate = request.GET.get('startDate')
-    enddate = request.GET.get('endDate')
     price = request.GET.get('price')
 
-    if selected_amenities:
-        hotels = hotels.filter(
-            amenities__name__in=selected_amenities).distinct()
+   
 
     if search:
         hotels = hotels.filter(
@@ -72,7 +67,7 @@ def index(request):
 
 
     hotels = hotels.distinct()
-    p = Paginator(hotels, 2)
+    p = Paginator(hotels, 5)
     page_no = request.GET.get('page')
 
     hotels = p.get_page(1)
@@ -83,15 +78,11 @@ def index(request):
     date = datetime.today().strftime('%Y-%m-%d')
 
     context = {
-        'amenities': amenities,
         'hotels': hotels,
         'sort_by': sort_by,
         'search': search,
-        'selected_amenities': selected_amenities,
         'no_of_pages': no_of_pages,
         'max_price': price,
-        'startdate': startdate,
-        'enddate': enddate,
         'date': date,
         'total_hotels': total_hotels
     }

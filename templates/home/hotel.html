@@ -16,7 +16,7 @@
 
 
 {% block body %}
-<div class=" container mt-4">
+<div class=" container mt-4 ">
 
     <div id="carouselExampleControls" class="carousel slide w-75 m-auto" data-bs-ride="carousel">
         <div class="carousel-inner">
@@ -30,16 +30,17 @@
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls"
             data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="carousel-control-prev-icon" ></span>
             <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls"
+        <button class="carousel-control-next type="button" data-bs-target="#carouselExampleControls"
             data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
         </button>
     </div>
-    <div class="mt-4 mb-4  w-75 m-auto">
+
+    <div class="container w-75 m-auto">
         <h1 class="fw-bold">{{hotel.hotel_name|title}}</h1>
         <ul class="list-group list-group-horizontal">
             {% for room_type, price in hotel.rooms.all|unique_room_types_with_prices %}
@@ -48,18 +49,12 @@
             </li>
             {% endfor %}
         </ul>
-        
-        {% for i in hotel.amenities.all %}
+    </div>
 
-        <ul class="list-group ">
-            <li class="list-group-item">{{i.amenity_name}}</li>
-        </ul>
-        {% endfor %}
+    <div class="mt-4 mb-4  w-75 m-auto">
         <div class="mt-4">
             <h3>Description</h3>
-            <p>
-                {{hotel.description}}
-            </p>
+            <p> {{hotel.description}} </p>
         
             {% if request.user.is_authenticated %}
             <div class="card">
@@ -70,7 +65,7 @@
                         <label for="rtype" class="mt-3">
                             Package Type
                         </label>
-                        <select name="roomType" class="form-control" id="roomType">
+                        <select name="roomType" class="form-control mt-1" id="roomType">
                             <option value="Deluxe" {% if room_type == 'Deluxe' %}selected{% endif %}>Deluxe</option>
                             <option value="Suite" {% if room_type == 'Suite' %}selected{% endif %}>Suite</option>
                             <option value="Family" {% if room_type == 'Family' %}selected{% endif %}>Family</option>
@@ -78,18 +73,18 @@
                             <option value="Premium" {% if room_type == 'Premium' %}selected{% endif %}>Superior</option>
                         </select>
                         
-                        <label for="startDate" class='mt-3'>
+                        <label for="startDate" class='mt-2'>
                             Check In
                         </label>
-                        <input type="date" name="startDate" class="form-control" id="startDate" name="startDate" min={{date}} 
+                        <input type="date" name="startDate" class="form-control mt-1" id="startDate" name="startDate" min={{date}} 
                         {% if startdate %}
                         value="{{startdate}}"
                         {% endif %}
                         >
-                        <label for="endDate" class="mt-3">
+                        <label for="endDate" class="mt-2">
                             Check Out
                         </label>
-                        <input type="date" name="endDate" class="form-control" id="endDate" name="endDate" min={{date}}
+                        <input type="date" name="endDate" class="form-control mt-1" id="endDate" name="endDate" min={{date}}
                         {% if enddate %}
                         value="{{enddate}}" 
                         {% endif %}
