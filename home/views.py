@@ -151,6 +151,7 @@ def signout(request):
 
 def get_hotel(request, id):
     hotel = get_object_or_404(Hotel, id=id)
+    reviews = hotel.review.all()  
     context = {'hotel': hotel}
     context['date'] = datetime.today().strftime('%Y-%m-%d')
 
@@ -161,6 +162,7 @@ def get_hotel(request, id):
 
         context['startdate'] = checkin
         context['enddate'] = checkout
+        context['reviews'] = reviews  
         context['roomType'] = broom_type  # Add selected room type to context for the template
         print(f"Selected room type: {broom_type}")
         broom_type = broom_type.capitalize()

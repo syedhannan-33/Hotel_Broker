@@ -3,7 +3,9 @@
 {{hotel.hotel_name}}
 {% endblock title %}
 {% load coustom_tags %}
-
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
 
 {% block css %}
 <style>
@@ -106,6 +108,40 @@
         </div>
 
     </div>
+    <div class=" row container w-75 m-auto mt-4">
+        
+        <!-- Existing Reviews -->
+        {% if hotel.review.exists %}
+        <div class="col-md list-group">
+            <h2 class="fw-bold">Reviews</h2>
+            {% for review in hotel.review.all %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-1">{{ review.customer.user.username }}</h5>
+                    <small class="text-muted">{{ review.date }}</small>
+                </div>
+                <p class="mb-1">{{ review.description }}</p>
+                <small class="text-warning">
+                    {% for i in "12345" %}
+                        {% if i|add:0 <= review.rating %}
+                            <i class="bi bi-star-fill"></i>
+                        {% else %}
+                            <i class="bi bi-star"></i> 
+                        {% endif %}
+                    {% endfor %}
+                </small>
+                
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No reviews yet. Be the first to leave one!</p>
+        {% endif %}
+        
+        
+        
+    </div>
+
 </div>
 
 {% endblock body %}
