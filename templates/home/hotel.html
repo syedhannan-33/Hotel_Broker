@@ -142,7 +142,7 @@
          <div class="col-md card mt-5">
              <div class="card-body">
                  <h5 class="card-title">Leave a Review</h5>
-                 <form method="POST">
+                 <form method="POST" action="{% url 'add_review' hotel.id %}">
                      {% csrf_token %}
                      <div class="mb-3">
                          <label for="rating" class="form-label">Rating</label>

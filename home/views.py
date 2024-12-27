@@ -12,6 +12,7 @@ from django.core.paginator import Paginator
 from datetime import datetime
 from django.db.models import Min, Max
 from decimal import Decimal
+from django.utils import timezone
 
 
 
@@ -307,6 +308,27 @@ def pay_booking(request, booking_id):
         'tax': tax,
         'total': total,
     })
+
+def add_review(request, hotel_id):
+    if request.method == "POST":
+        hotel = get_object_or_404(Hotel, id=hotel_id)
+        rating = request.POST.get('rating')
+        description = request.POST.get('description')
+
+        if not rating or not description:
+            messages.error(request, "All fields are required.")
+            return redirect('hotel_detail', hotel_id=hotel_id)
+
+        # Create and save the review
+        Review.objects.create(
+            customer=request.user.customer_profile,
+            hotel=hotel,
+            rating=rating,
+            description=description,
+            date=timezone.now()
+        )
+        messages.success(request, "Your review has been submitted.")
+        return redirect('get_hotel', id=hotel_id)
 
 
 
