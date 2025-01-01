@@ -298,7 +298,7 @@ def pay_booking(request, booking_id):
         # Save the payment details
         Payments.objects.create(
             booking=booking,
-            date=now(),
+            date=timezone.now(),
             Amount=total,
             method=payment_method.capitalize(),
             Status=Payments.StatusChoice.Paid
