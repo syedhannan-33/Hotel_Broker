@@ -37,9 +37,10 @@ My Bookings
                     <button type="submit" class="btn btn-danger mx-2" {% if booking.status == 'Canceled' %}disabled{% endif %}>Cancel</button>
                 </form>
 
-                <!-- Pay Button -->
+                <!-- Payment Buttons -->
                 {% if booking.status == 'Pending' %}
-                <a href="{% url 'pay_booking' booking.id %}" class="btn btn-success" style="margin-left: 10px;">Pay</a>
+                <a href="{% url 'pay_booking' booking.id %}?method=card" class="btn btn-primary" style="margin-left: 10px;">Pay by Card</a>
+                <a href="{% url 'pay_booking' booking.id %}?method=cash" class="btn btn-secondary" style="margin-left: 10px;">Pay by Cash</a>
                 {% endif %}
             </td>
         </tr>

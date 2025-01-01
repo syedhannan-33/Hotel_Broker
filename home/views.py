@@ -261,52 +261,66 @@ def cancel_booking(request, booking_id):
 
 
 def pay_booking(request, booking_id):
-    # Fetch the booking to be paid
+    # Fetch the booking
     booking = get_object_or_404(Booking, id=booking_id)
 
-    # Calculate the number of nights and the total cost
+    # Calculate the number of nights
     start_date = booking.start_date
     end_date = booking.end_date
     num_nights = (end_date - start_date).days
 
-    # Get the tax rate from the hotel's tax class
-    tax_rate = booking.tax.percentage if booking.tax else 0
 
-    # Calculate the total amount
+    # Base calculations
     price_per_night = booking.room.price_per_night
     sub_total = num_nights * price_per_night
-    tax = sub_total * (tax_rate/Decimal(100))
-    total = sub_total + tax
+    sales_tax = (sub_total * Decimal(0.15)).quantize(Decimal('0.01'))
+    # Determine payment method and calculate additional tax
+    payment_method = request.GET.get('method', 'card')  # Default to 'card' if no method is provided
+    tax_card = (Decimal(0.05) * sub_total).quantize(Decimal('0.01') )
+    tax_cash = (Decimal(0.16) * sub_total).quantize(Decimal('0.01') )
+    if payment_method.lower() == 'cash':
+        additional_tax = sub_total * Decimal(0.16)  # 16% cash tax
+    else:  # Assume 'card'
+        additional_tax = sub_total * Decimal(0.05)  # 5% card tax
+
+    # Final total
+    total = sub_total  + sales_tax + additional_tax
 
     if request.method == 'POST':
-        # Update the booking status to "Confirmed" once payment is made
+        # Update the booking status to "Confirmed"
         booking.status = Booking.StatusChoices.CONFIRMED
         booking.save()
 
+        # Mark the room as booked
         booking.room.is_Booked = True
         booking.room.save()
 
+        # Save the payment details
         Payments.objects.create(
             booking=booking,
-            date=datetime.now(),
+            date=now(),
             Amount=total,
-            method=Payments.MethodChoice.Online,  # Assuming payment is online; modify as needed
+            method=payment_method.capitalize(),
             Status=Payments.StatusChoice.Paid
         )
 
-        messages.success(request, f'Your booking with ID {booking.id} has been successfully confirmed.')
+        # Notify the user
+        messages.success(request, f'Payment successful! Booking ID: {booking.id} has been confirmed.')
 
-        # Redirect to a success page
+        # Redirect to the user's bookings page
         return redirect('my_bookings')
 
-    # Render the payment page with calculated values
+    # Render the payment page
     return render(request, 'home/pay_booking.html', {
         'booking': booking,
         'num_nights': num_nights,
         'price_per_night': price_per_night,
         'sub_total': sub_total,
-        'tax': tax,
+        'sales_tax': sales_tax,
         'total': total,
+        'tax_card' : tax_card,
+        'tax_cash' : tax_cash,
+        'payment_method': payment_method.capitalize(),
     })
 
 def add_review(request, hotel_id):

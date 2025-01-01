@@ -16,7 +16,9 @@ Pay for Booking - {{ booking.id }}
     <p><strong>Price per Night:</strong> ${{ price_per_night }}</p>
     <p><strong>Number of Nights:</strong> {{ num_nights }}</p>
     <p><strong>Subtotal:</strong> ${{ sub_total }}</p>
-    <p><strong>Tax ({{ booking.tax.percentage }}%):</strong> ${{ tax }}</p>
+    <p><strong>Sales Tax ({{ booking.tax.percentage }}%):</strong> ${{ sales_tax }}</p>
+    <p><strong>Tax on Card 5%</strong>${{tax_card}}</p>
+    <p><strong>Tax on Cash 16%</strong>${{tax_cash}}</p>
     <p><strong>Total Amount:</strong> ${{ total|floatformat:2 }}</p>
 
     <form method="POST">
